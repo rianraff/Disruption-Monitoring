@@ -1,6 +1,19 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const axios = require('axios');
+
+// Get location from User's IP
+const getLocationFromIP = async (ip) => {
+  try {
+    const response = await axios.get(`https://ipinfo.io/${ip}/json?token=${process.env.IPINFO_TOKEN}`);
+    const [lat, lng] = response.data.loc.split(","); // 'loc' berisi 'latitude,longitude'
+    return { lat: parseFloat(lat), lng: parseFloat(lng) };
+  } catch (error) {
+    console.error("Error getting location from IP:", error.message);
+    return { lat: null, lng: null };
+  }
+};
 
 // Register a new user
 exports.createUser = async (req, res) => {
@@ -39,7 +52,16 @@ exports.loginUser = async (req, res) => {
       expiresIn: "1h", // Token expires in 1 hour
     });
 
-    res.status(200).json({ message: "Login successful", token, userId: user.id });
+    // Get User's IP from header or connection
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const location = await getLocationFromIP(ip);
+
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      userId: user.id,
+      location
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

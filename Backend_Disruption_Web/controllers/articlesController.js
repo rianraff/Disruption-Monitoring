@@ -6,21 +6,25 @@ const newsapi = new NewsAPI(process.env.NEWS_API_KEY);
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
 const axios = require("axios");
 
-// [FUNCTIONAL] Function to check if an article already exists in the database
-const checkArticleExists = async (url) => {
-  try {
-    const result = await pool.query(
-      "SELECT id FROM articles WHERE url = $1 AND isdeleted = false",
-      [url]
-    );
-    return result.rowCount > 0; // Return true if article exists
-  } catch (error) {
-    console.error("Error checking article existence:", error.message);
-    return false;
-  }
+const SINGAPORE_LAT = 1.3521;
+const SINGAPORE_LNG = 103.8198;
+
+// Utility function to calculate distance between two points using Haversine formula
+const calculateRadius = (lat1, lng1, lat2, lng2) => {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLng = (lng2 - lng1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
 };
 
-// Function to get latitude and longitude using Google Geocoding API
+// Utility function to get latitude and longitude using Google Geocoding API
 const getLatLngFromLocation = async (location) => {
   if (!location || location === "Unknown") {
     return { lat: null, lng: null };
@@ -51,11 +55,91 @@ const getLatLngFromLocation = async (location) => {
   }
 };
 
+//Utility function to get disruption types from database
+const getCategoriesForPrompt = async () => {
+  const categories = await pool.query(
+    'SELECT category_name FROM disruption_categories WHERE isdeleted = FALSE'
+  );
+
+  return categories.rows.map(cat => `'${cat.category_name}'`).join(', ');
+};
+
+// Utility function if fail to get country
+const detectCountryFallback = (text) => {
+  const countries = [
+    "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", 
+    "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", 
+    "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", 
+    "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", 
+    "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", 
+    "Chad", "Chile", "China", "Colombia", "Comoros", "Congo (Congo-Brazzaville)", 
+    "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czechia (Czech Republic)", "Denmark", 
+    "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", 
+    "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini (fmr. Swaziland)", "Ethiopia", 
+    "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", 
+    "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", 
+    "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", 
+    "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", 
+    "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", 
+    "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", 
+    "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia (Federated States of)", 
+    "Moldova (Republic of)", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", 
+    "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", 
+    "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", 
+    "Palau", "Palestine State", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", 
+    "Poland", "Portugal", "Qatar", "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis", 
+    "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", 
+    "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", 
+    "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", 
+    "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Tajikistan", 
+    "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", 
+    "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", 
+    "United Kingdom", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", 
+    "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+  ];
+  
+  // Convert text to lowercase for case-insensitive matching
+  const lowerText = text.toLowerCase();
+
+  for (const country of countries) {
+    const lowerCountry = country.toLowerCase();
+    const regex = new RegExp(`\\b${lowerCountry}\\b`, 'i');
+    if (regex.test(lowerText)) {
+      console.log(`Detected country: ${country}`);
+      return country;
+    }
+  }
+
+  console.log("No country detected, returning 'Unknown'");
+  return "Unknown";
+};
+
+// [FUNCTIONAL] Function to check if an article already exists in the database
+const checkArticleExists = async (url) => {
+  try {
+    const result = await pool.query(
+      "SELECT id FROM articles WHERE url = $1 AND isdeleted = false",
+      [url]
+    );
+    return result.rowCount > 0; // Return true if article exists
+  } catch (error) {
+    console.error("Error checking article existence:", error.message);
+    return false;
+  }
+};
+
 // [FUNCTIONAL] Function to detect severity and location using OpenAI GPT-4o-Mini
 const detectSeverityAndLocation = async (text) => {
-  const prompt = `Based on this article description: "${text}", classify the severity of the disruption into one of the following: Low, Medium, High. 
-                  Also, classify the country location of the disruption. Format the response as: "Severity: <Low/Medium/High>, Location: <country>". 
-                  If unsure or unknown, just put the response as: "Severity: Low, Location: Unknown".`;
+  const prompt = `Given the following information about an article "${text}":
+                  
+                  Based on this information, please:
+                  1. Determine the severity level of the disruption mentioned, selecting from: "Low," "Medium," or "High." 
+                     - Consider the overall tone and language used to assess impact level.
+                  2. Identify the primary country affected by the disruption. 
+                     - If multiple countries are mentioned, select the one that is most frequently referenced. 
+                     - If no country is clearly specified, return "Location: Unknown."
+                  Format the response as exactly: "Severity: <Low/Medium/High>, Location: <Country Name>". 
+                  If unable to determine severity or location, respond with: "Severity: Low, Location: Unknown".`;
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
@@ -63,11 +147,11 @@ const detectSeverityAndLocation = async (text) => {
       {
         role: "system",
         content:
-          "You are an assistant that categorizes disruption severity and location.",
+          "You are an assistant that categorizes disruption severity and identifies primary affected location.",
       },
       { role: "user", content: prompt },
     ],
-    max_tokens: 20,
+    max_tokens: 50,
   });
 
   const response =
@@ -83,53 +167,50 @@ const detectSeverityAndLocation = async (text) => {
 
 // [FUNCTIONAL] Function to detect disruption type using OpenAI GPT-4o-Mini
 const detectDisruptionType = async (text) => {
-  const prompt = `Classify the disruption in the following article into one of these categories: 
-                  'Airport Disruption', 
-                  'Bankruptcy', 
-                  'Business Spin-Off', 
-                  'Business Sale',
-                  'Chemical Spill',
-                  'Corruption',
-                  'Company Split',
-                  'Cyber Attack',
-                  'FDA/EMA/OSHA Action',
-                  'Factory Fire',
-                  'Fine',
-                  'Geopolitical',
-                  'Leadership Transition',
-                  'Legal Action',
-                  'Merger & Acquisition',
-                  'Port Disruption',
-                  'Protest/Riot',
-                  'Supply Shortage',
-                  'Earthquake',
-                  'Extreme Weather',
-                  'Flood',
-                  'Hurricane',
-                  'Tornado',
-                  'Volcano',
-                  'Human Health',
-                  'Power Outage',
-                  'CNA',
-                  'Port Disruption',
-                  or 'Unknown'. Just choose one, no explanation!`;
+  const categoriesList = await getCategoriesForPrompt();
+  const prompt = `Based on the following information about an article: ${text}
+                  
+                  Classify the disruption described in this article into one of these categories:
+                  ${categoriesList}
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "system",
-        content:
-          "You are an assistant that categorizes disruptions type AND can only choose one without explanation.",
-      },
-      { role: "user", content: prompt },
-    ],
-    max_tokens: 10,
-  });
+                  Select only one category from the list above that best fits the type of disruption. Do not provide any additional text or explanation, just respond with the single category name.`;
 
-  const disruption =
-    completion.choices[0]?.message?.content?.trim() || "Unknown";
-  return disruption;
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are an assistant that categorizes disruptions." },
+        { role: "user", content: prompt },
+      ],
+      max_tokens: 10,
+    });
+
+    return completion.choices[0]?.message?.content?.trim() || "Unknown";
+  } catch (error) {
+    console.error("Error in detectDisruptionType:", error.message);
+    return "Unknown"; // Return a default value if API fails
+  }
+};
+
+// [FUNCTIONAL] Function to summarize an article using OpenAI GPT-4o-Mini
+const summarizeArticle = async (text) => {
+  const prompt = `Summarize the following article into a concise overview of no more than four sentences. Focus on the main points, events, or conclusions described: "${text}"`
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are an assistant that provides brief and informative summaries of articles." },
+        { role: "user", content: prompt },
+      ],
+      max_tokens: 100,
+    });
+
+    return completion.choices[0]?.message?.content?.trim() || text;
+  } catch (error) {
+    console.error("Error summarizing article:", error.message);
+    return text;
+  }
 };
 
 // [FUNCTIONAL] Function to save articles to the database (batch insertion)
@@ -153,7 +234,7 @@ const saveArticlesToDatabase = async (articles) => {
       article.location,
       article.lat || 0.0,
       article.lng || 0.0,
-      article.radius || null,
+      article.radius || 0,
       article.isDeleted || false,
     ];
 
@@ -169,18 +250,6 @@ const saveArticlesToDatabase = async (articles) => {
   } catch (error) {
     console.error("Error saving articles to the database:", error.message);
   }
-};
-
-// Utility function to extract the first two paragraphs
-const extractFirstTwoParagraphs = (text) => {
-  const paragraphs = text.split("\n\n"); // Assuming paragraphs are separated by two newlines
-  return paragraphs.slice(0, 2).join("\n\n");
-};
-
-// Utility function to clean up the truncated "chars" message at the end of article content
-const cleanArticleContent = (content) => {
-  const charPattern = /\[\+\d+ chars\]/g; // Matches patterns like [+1234 chars]
-  return content.replace(charPattern, "").trim(); // Remove the pattern and trim extra spaces
 };
 
 // Function to scrape and save articles
@@ -199,14 +268,12 @@ const scrapeAndSaveArticles = async (req, res) => {
     if (response.status === "ok" && response.articles.length > 0) {
       const articlesToSave = [];
 
-      for (const article of response.articles) {
-        // Use utility function to extract the first two paragraphs and clean up content
-        let text = article.content
-          ? extractFirstTwoParagraphs(article.content)
-          : article.description || article.title || "No Content Available";
+      // Get user's location from request (if provided)
+      const userLat = req.body.userLat || SINGAPORE_LAT;
+      const userLng = req.body.userLng || SINGAPORE_LNG;
 
-        // Clean up the "chars" truncation pattern if present
-        text = cleanArticleContent(text);
+      for (const article of response.articles) {
+        const text = article.content || article.description || article.title || "No Content Available";
 
         const articleExists = await checkArticleExists(article.url);
         if (articleExists) {
@@ -216,12 +283,15 @@ const scrapeAndSaveArticles = async (req, res) => {
 
         const disruptionType = await detectDisruptionType(text);
         const { severity, location } = await detectSeverityAndLocation(text);
+        const finalLocation = location === "Unknown" ? detectCountryFallback(text) : location;
         const { lat, lng } = await getLatLngFromLocation(location);
+        const radius = lat && lng ? Math.round(calculateRadius(userLat, userLng, lat, lng)) : null;
+        const summarizedText = await summarizeArticle(text);
 
         const articleData = {
           title: article.title || "No Title",
-          text: text, // Save the cleaned content here
-          location: location,
+          text: summarizedText,
+          location: finalLocation,
           disruptionType: disruptionType,
           severity: severity,
           sourceName: article.source.name || "Unknown",
@@ -230,6 +300,7 @@ const scrapeAndSaveArticles = async (req, res) => {
           imageUrl: article.urlToImage || "No Image",
           lat: lat,
           lng: lng,
+          radius: radius,
         };
 
         articlesToSave.push(articleData);

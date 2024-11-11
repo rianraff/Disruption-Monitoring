@@ -1,18 +1,17 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const preferencesController = require('../controllers/preferencesController');
-const authenticateToken = require('../middleware/authenticateToken');
+const preferencesController = require("../controllers/preferencesController");
 
-// Get suppliers for preference form
-router.get('/suppliers', preferencesController.getSuppliers);
+// Endpoint for filtering articles by preferences
+router.get("/filter-articles", preferencesController.filterArticlesByPreferences);
 
-// Get cities for preference form
-router.get('/cities', preferencesController.getCities);
+// Endpoint to get available locations for the dropdown
+router.get("/available-locations", preferencesController.getAvailableLocations);
 
-// Save user preferences (multiple suppliers and locations)
-router.post('/save', authenticateToken, preferencesController.saveUserPreferences);
+// Endpoint to get available disruption types for the dropdown
+router.get("/available-disruption-types", preferencesController.getAvailableDisruptionTypes);
 
-// Get user preferences
-router.get('/user', authenticateToken, preferencesController.getUserPreferences);
+// Endpoint to get available severity levels for the dropdown
+router.get("/available-severity-levels", preferencesController.getAvailableSeverityLevels);
 
 module.exports = router;
