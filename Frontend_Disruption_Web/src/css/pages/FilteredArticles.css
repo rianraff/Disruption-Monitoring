@@ -1,0 +1,66 @@
+.filtered-articles-container {
+    margin: 2rem;
+    font-family: 'Lato', sans-serif;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+  
+  .articles-card {
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .articles-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  
+  .articles-table th, .articles-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .articles-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .articles-table tr:hover {
+    background-color: #f9f9f9;
+  }
+  
+  .article-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+  
+  .status-badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.875rem;
+    color: white;
+  }
+  
+  .status-badge.low {
+    background-color: #00b69b;
+  }
+  
+  .status-badge.medium {
+    background-color: #ff9500;
+  }
+  
+  .status-badge.high {
+    background-color: #d32f2f;
+  }
+  

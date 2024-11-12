@@ -1,0 +1,132 @@
+/* Updated Articles Card CSS */
+
+.articles-card {
+  width: 100%;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Slight shadow to make it distinct */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0; /* Remove padding to avoid nested card appearance */
+  margin: 0; /* Avoid extra margins that may affect layout */
+}
+
+.articles-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem; /* Add padding inside header */
+  border-bottom: 1px solid #e0e0e0; /* Divider line between header and content */
+}
+
+.articles-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.refresh-button {
+  padding: 0.4rem 0.75rem;
+  background-color: #6b46c1;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.3s ease;
+}
+
+.refresh-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.refresh-button:hover:enabled {
+  background-color: #553c9a;
+}
+
+.table-wrapper {
+  max-height: 300px;
+  overflow-y: auto;
+  border-radius: 8px;
+  padding: 1rem; /* Add padding here for table content */
+}
+
+.articles-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.articles-table th,
+.articles-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.articles-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #6c757d;
+}
+
+.articles-table tr:hover {
+  background-color: #f1f3f5;
+  cursor: pointer;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: medium;
+  color: #ffffff;
+}
+
+.badge.low {
+  background-color: #00b69b;
+}
+
+.badge.medium {
+  background-color: #ff9500;
+}
+
+.badge.high {
+  background-color: #ff0000;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem; /* Ensure pagination is aligned with the card layout */
+}
+
+.pagination button {
+  padding: 0.4rem 0.75rem;
+  background-color: #6b46c1;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.3s ease;
+}
+
+.pagination button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.pagination button:hover:enabled {
+  background-color: #553c9a;
+}
+
+.pagination span {
+  font-size: 1rem;
+  color: #6c757d;
+  white-space: nowrap;
+}

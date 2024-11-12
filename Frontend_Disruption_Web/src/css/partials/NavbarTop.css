@@ -1,0 +1,84 @@
+/* NavbarTop.css */
+
+.navbar-top {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid #ddd;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+}
+
+.menu-button {
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.menu-button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.search-form {
+  margin-left: 1rem;
+}
+
+.search-input {
+  width: 300px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  padding: 5px 15px;
+  background-color: #f9f9f9;
+}
+
+.search-input::placeholder {
+  color: #999;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+}
+
+.profile-icon-container {
+  cursor: pointer;
+}
+
+/* Remove the default dropdown indicator */
+.no-arrow::after {
+  display: none !important;
+}
+
+.profile-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+.profile-dropdown-menu {
+  min-width: 200px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.profile-dropdown-menu .dropdown-item {
+  color: #333;
+}
+
+.profile-dropdown-menu .dropdown-item:hover {
+  background-color: #f0f0f0;
+}
+
+.logout-item {
+  color: #ff4d4f;
+}
+
+.logout-item:hover {
+  background-color: #ffe6e6;
+}

@@ -1,0 +1,99 @@
+/* Article Detail Modal Styling */
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.875rem;
+  color: white;
+  margin-top: 5px;
+}
+
+.status-badge.low {
+  background-color: #00b69b; /* Green for low severity */
+}
+
+.status-badge.medium {
+  background-color: #ff9500; /* Orange for medium severity */
+}
+
+.status-badge.high {
+  background-color: #d32f2f; /* Red for high severity */
+}
+
+/* Button styling for the "View Original Article" link */
+.modal-footer .btn-link {
+  color: #0059ff;
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.modal-footer .btn-link:hover {
+  color: #003cb3;
+  text-decoration: none;
+}
+
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+}
+
+.badge.low {
+  background-color: #e0f7fa;
+  color: #00796b;
+}
+
+.badge.medium {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.badge.high {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.details-top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.published-date {
+  color: #6c757d; /* Adjust color to match the design */
+  font-size: 0.875rem;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+}
+
+.badge.low {
+  background-color: #e0f7fa;
+  color: #00796b;
+}
+
+.badge.medium {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.badge.high {
+  background-color: #ffebee;
+  color: #d32f2f;
+}

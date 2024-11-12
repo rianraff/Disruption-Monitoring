@@ -1,0 +1,26 @@
+.greeting-container {
+    position: relative;
+    display: inline-block;
+}
+
+.greeting {
+    cursor: pointer;
+    padding: 10px;
+    /* background-color: #007bff; */
+    color: #000000;
+    border-radius: 3px;
+    font-size: 50px;
+    align-items: end;
+}
+
+.dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    z-index: 1000;
+}
