@@ -2,6 +2,7 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { Card, Image, Table } from 'react-bootstrap';
 import { useLocation, useSearchParams } from 'react-router-dom';
+import ArticleDetail from '../components/ArticleDetail';
 import '../css/pages/FilteredArticles.css';
 import NavbarTop from '../partials/NavbarTop';
 import Sidebar from '../partials/Sidebar';
@@ -10,12 +11,14 @@ const API_BASE_URL_FILTER = "http://localhost:5001/api/preferences/filter-articl
 const API_BASE_URL_SEARCH = "http://localhost:5001/api/preferences/search";
 
 const FilteredArticles = () => {
-  const { state: filterCriteria } = useLocation(); // Used for filters from ArticlePreferences
-  const [searchParams] = useSearchParams(); // Used for URL parameters like query
+  const { state: filterCriteria } = useLocation();
+  const [searchParams] = useSearchParams();
   const [articles, setArticles] = useState([]);
+  const [selectedArticle, setSelectedArticle] = useState(null); // Untuk artikel yang dipilih
+  const [isModalOpen, setIsModalOpen] = useState(false); // Untuk status modal
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const query = searchParams.get("query"); // Retrieve "query" from the URL
+  const query = searchParams.get("query");
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -23,33 +26,32 @@ const FilteredArticles = () => {
         let response;
 
         if (query) {
-          // If a search query exists, use the search API
-          response = await axios.get(API_BASE_URL_SEARCH, {
-            params: { query },
-          });
+          response = await axios.get(API_BASE_URL_SEARCH, { params: { query } });
         } else if (filterCriteria) {
-          // If no query, fallback to filter criteria from ArticlePreferences
-          response = await axios.get(API_BASE_URL_FILTER, {
-            params: filterCriteria,
-          });
+          response = await axios.get(API_BASE_URL_FILTER, { params: filterCriteria });
         }
 
-        if (response) {
-          setArticles(response.data);
-        } else {
-          setArticles([]); // Reset if no valid response
-        }
+        setArticles(response ? response.data : []);
       } catch (error) {
         console.error("Error fetching articles:", error);
       }
     };
 
-    // Run fetchArticles when `query` or `filterCriteria` changes
     fetchArticles();
   }, [query, filterCriteria]);
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  // Fungsi untuk membuka modal detail artikel
+  const handleRowClick = (article) => {
+    setSelectedArticle(article);
+    setIsModalOpen(true);
+  };
+
+  // Fungsi untuk menutup modal
+  const handleCloseModal = () => {
+    setSelectedArticle(null);
+    setIsModalOpen(false);
   };
 
   return (
@@ -84,11 +86,9 @@ const FilteredArticles = () => {
                       </thead>
                       <tbody>
                         {articles.map((article) => (
-                          <tr key={article.id}>
-                            <td>
-                              <Image src={article.imageurl} alt="Article Image" className="article-image" />
-                            </td>
-                            <td><a href={article.url} target="_blank" rel="noopener noreferrer">{article.title}</a></td>
+                          <tr key={article.id} onClick={() => handleRowClick(article)} style={{ cursor: 'pointer' }}>
+                            <td><Image src={article.imageurl} alt="Article" className="article-image" /></td>
+                            <td>{article.title}</td>
                             <td>{new Date(article.publisheddate).toLocaleDateString()}</td>
                             <td>{article.location || "Unknown"}</td>
                             <td>{article.disruptiontype}</td>
@@ -111,6 +111,11 @@ const FilteredArticles = () => {
           </main>
         </div>
       </div>
+
+      {/* Modal menggunakan komponen ArticleDetail */}
+      {selectedArticle && (
+        <ArticleDetail article={selectedArticle} onClose={handleCloseModal} />
+      )}
     </div>
   );
 };

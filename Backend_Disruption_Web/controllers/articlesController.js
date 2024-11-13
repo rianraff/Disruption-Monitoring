@@ -262,7 +262,7 @@ const scrapeAndSaveArticles = async (req, res) => {
         .slice(0, 10),
       language: "en",
       sortBy: "publishedAt",
-      pageSize: 10,
+      pageSize: 20,
     });
 
     if (response.status === "ok" && response.articles.length > 0) {

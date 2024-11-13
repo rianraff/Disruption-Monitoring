@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import '../src/css/style.css';
 import ArticleDetail from './components/ArticleDetail';
+import AnalyticsPage from './pages/AnalyticsPage.jsx';
 import FilteredArticles from './pages/FilteredArticles';
 import HomePage from './pages/HomePage';
 import Login from './pages/LoginPage';
@@ -29,6 +30,7 @@ function App() {
                     <Route path="/preferences" element={<PreferencePage />} />
                     <Route path="/article/:id" element={<ArticleDetail />} />
                     <Route path="/filtered-articles" element={<FilteredArticles />} />
+                    <Route path="/analytics" element={<AnalyticsPage />} />
                 </Routes>
             </div>
     );
