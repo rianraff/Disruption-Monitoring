@@ -115,9 +115,35 @@ const filterArticlesByPreferences = async (req, res) => {
   }
 };
 
+// Endpoint to search articles by a generic search term
+const searchArticles = async (req, res) => {
+  const { query } = req.query;
+
+  try {
+    const result = await pool.query(`
+      SELECT * FROM Articles
+      WHERE IsDeleted = false
+      AND (title ILIKE $1 OR location ILIKE $1 OR disruptiontype ILIKE $1 OR severity ILIKE $1)
+      ORDER BY publisheddate DESC
+    `, [`%${query}%`]);
+
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error("Error searching articles:", error.message);
+    res.status(500).json({ message: "Error searching articles." });
+  }
+};
+
+module.exports = {
+  searchArticles,
+  // other controllers
+};
+
+
 module.exports = {
   filterArticlesByPreferences,
   getAvailableLocations,
   getAvailableDisruptionTypes,
   getAvailableSeverityLevels,
+  searchArticles,
 };

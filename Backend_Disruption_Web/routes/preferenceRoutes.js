@@ -14,4 +14,7 @@ router.get("/available-disruption-types", preferencesController.getAvailableDisr
 // Endpoint to get available severity levels for the dropdown
 router.get("/available-severity-levels", preferencesController.getAvailableSeverityLevels);
 
+// Endpoint to search generic articles
+router.get("/search", preferencesController.searchArticles);
+
 module.exports = router;

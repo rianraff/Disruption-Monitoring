@@ -32,7 +32,7 @@ function Sidebar({ isCollapsed, activePage }) {
         </Nav.Item>
         <Nav.Item>
           <Nav.Link as={NavLink} to="/messages" eventKey="/messages">
-            Messages
+            Notification
           </Nav.Link>
         </Nav.Item>
         <Nav.Item>

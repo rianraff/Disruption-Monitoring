@@ -63,8 +63,7 @@ const getCategoriesForPrompt = async () => {
 
   return categories.rows.map(cat => `'${cat.category_name}'`).join(', ');
 };
-
-// Utility function if fail to get country
+// Utility function to manually detect country if AI fails
 const detectCountryFallback = (text) => {
   const countries = [
     "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", 
@@ -98,20 +97,17 @@ const detectCountryFallback = (text) => {
     "Vietnam", "Yemen", "Zambia", "Zimbabwe"
   ];
   
-  // Convert text to lowercase for case-insensitive matching
   const lowerText = text.toLowerCase();
-
   for (const country of countries) {
     const lowerCountry = country.toLowerCase();
-    const regex = new RegExp(`\\b${lowerCountry}\\b`, 'i');
-    if (regex.test(lowerText)) {
+    if (lowerText.includes(lowerCountry)) {
       console.log(`Detected country: ${country}`);
       return country;
     }
   }
 
-  console.log("No country detected, returning 'Unknown'");
-  return "Unknown";
+  // Default country if none detected from the list (fallback option)
+  return "United States of America";
 };
 
 // [FUNCTIONAL] Function to check if an article already exists in the database
@@ -137,9 +133,8 @@ const detectSeverityAndLocation = async (text) => {
                      - Consider the overall tone and language used to assess impact level.
                   2. Identify the primary country affected by the disruption. 
                      - If multiple countries are mentioned, select the one that is most frequently referenced. 
-                     - If no country is clearly specified, return "Location: Unknown."
-                  Format the response as exactly: "Severity: <Low/Medium/High>, Location: <Country Name>". 
-                  If unable to determine severity or location, respond with: "Severity: Low, Location: Unknown".`;
+                     - If no clear country is specified, try to infer the location from contextual clues, but never respond with "Unknown" as the location.
+                  Format the response exactly as: "Severity: <Low/Medium/High>, Location: <Country Name>".`;
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
@@ -147,7 +142,7 @@ const detectSeverityAndLocation = async (text) => {
       {
         role: "system",
         content:
-          "You are an assistant that categorizes disruption severity and identifies primary affected location.",
+          "You are an assistant that categorizes disruption severity and always provides a primary affected country based on the context, even if inferred.",
       },
       { role: "user", content: prompt },
     ],
@@ -162,7 +157,12 @@ const detectSeverityAndLocation = async (text) => {
     .split(",")
     .map((part) => part.split(":")[1].trim());
 
-  return { severity, location };
+  // Fallback to detect country manually if AI fails to detect a valid country
+  const finalLocation = location === "No Location Detected" || location === "Unknown" 
+    ? detectCountryFallback(text) 
+    : location;
+
+  return { severity, location: finalLocation };
 };
 
 // [FUNCTIONAL] Function to detect disruption type using OpenAI GPT-4o-Mini
@@ -256,7 +256,7 @@ const saveArticlesToDatabase = async (articles) => {
 const scrapeAndSaveArticles = async (req, res) => {
   try {
     const response = await newsapi.v2.everything({
-      q: "disruption",
+      q: "global disruption OR world disruption OR economic disruption OR infrastructure disruption",
       from: new Date(new Date().setDate(new Date().getDate() - 7))
         .toISOString()
         .slice(0, 10),
@@ -275,19 +275,39 @@ const scrapeAndSaveArticles = async (req, res) => {
       for (const article of response.articles) {
         const text = article.content || article.description || article.title || "No Content Available";
 
+        // Check if article has been removed by testing if the URL is still accessible
+        try {
+          const urlCheckResponse = await axios.get(article.url);
+          if (urlCheckResponse.status !== 200) {
+            console.log(`Article "${article.title}" has been removed. Skipping...`);
+            continue; // Skip this article if URL is not accessible
+          }
+        } catch (error) {
+          console.log(`Failed to access URL for article "${article.title}". Skipping...`);
+          continue; // Skip this article if URL is not accessible
+        }
+
+        // Check if article already exists in the database
         const articleExists = await checkArticleExists(article.url);
         if (articleExists) {
           console.log(`Article "${article.title}" already exists. Skipping...`);
           continue;
         }
 
+        // Detect if the article is truly about disruptions using disruption type
         const disruptionType = await detectDisruptionType(text);
+        if (disruptionType === "Unknown") {
+          console.log(`Article "${article.title}" is not related to relevant disruptions. Skipping...`);
+          continue; // Skip articles that aren't about disruptions
+        }
+
         const { severity, location } = await detectSeverityAndLocation(text);
         const finalLocation = location === "Unknown" ? detectCountryFallback(text) : location;
-        const { lat, lng } = await getLatLngFromLocation(location);
+        const { lat, lng } = await getLatLngFromLocation(finalLocation);
         const radius = lat && lng ? Math.round(calculateRadius(userLat, userLng, lat, lng)) : null;
         const summarizedText = await summarizeArticle(text);
 
+        // Prepare article data
         const articleData = {
           title: article.title || "No Title",
           text: summarizedText,
@@ -306,11 +326,9 @@ const scrapeAndSaveArticles = async (req, res) => {
         articlesToSave.push(articleData);
       }
 
-      // Save all articles to the database
+      // Save all filtered and valid articles to the database
       await saveArticlesToDatabase(articlesToSave);
-      res
-        .status(200)
-        .json({ message: "Articles scraped and saved successfully." });
+      res.status(200).json({ message: "Articles scraped and saved successfully." });
     } else {
       res.status(400).json({ message: "No articles found." });
     }
@@ -403,45 +421,10 @@ const deleteArticle = async (req, res) => {
   }
 };
 
-// articlesController.js
-
-const getArticlesByPreferences = async (req, res) => {
-  const userId = req.user.userId;
-
-  try {
-    // Get user preferences for location from the database
-    const userPreferences = await pool.query(
-      `SELECT cities.id FROM userpreferences 
-       JOIN cities ON userpreferences.preferredlocation = cities.id
-       WHERE userpreferences.userid = $1 AND userpreferences.isdeleted = false`,
-      [userId]
-    );
-
-    if (userPreferences.rows.length === 0) {
-      return res.status(404).json({ message: "No preferences found for this user" });
-    }
-
-    // Get the preferred locations (array of city names)
-    const preferredLocations = userPreferences.rows.map(row => row.location);
-
-    // Fetch articles that match the user's preferred locations
-    const articlesResult = await pool.query(
-      `SELECT * FROM articles WHERE location = ANY($1::text[]) AND isdeleted = false`,
-      [preferredLocations]
-    );
-
-    res.status(200).json(articlesResult.rows);
-  } catch (error) {
-    console.error("Error fetching filtered articles:", error.message);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
 module.exports = {
   scrapeAndSaveArticles,
   getAllArticles,
   getFilteredArticles,
-  getArticlesByPreferences,
   getArticleById,
   deleteArticle,
 };

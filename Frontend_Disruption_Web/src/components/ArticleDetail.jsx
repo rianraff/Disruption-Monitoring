@@ -1,10 +1,9 @@
 import React, { useEffect, useRef } from "react";
-import { Button, Modal } from 'react-bootstrap'; // Import Bootstrap components
-
-const API_BASE_URL = "http://localhost:5001/api";
+import { Button, Modal } from 'react-bootstrap';
 
 const ArticleDetail = ({ article, onClose }) => {
   const mapRef = useRef(null);
+  const imageRef = useRef(null);
 
   useEffect(() => {
     const loadGoogleMaps = () => {
@@ -24,7 +23,7 @@ const ArticleDetail = ({ article, onClose }) => {
     const initMap = async () => {
       await loadGoogleMaps();
 
-      if (article && article.lat && article.lng) {
+      if (article.lat && article.lng) {
         const lat = parseFloat(article.lat);
         const lng = parseFloat(article.lng);
 
@@ -54,31 +53,40 @@ const ArticleDetail = ({ article, onClose }) => {
 
   if (!article) return null;
 
-  const formattedDate = new Date(article.publisheddate).toLocaleDateString();
+  const formattedDate = new Date(article.publisheddate).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
 
   return (
-    <Modal show={true} onHide={onClose} size="lg" centered scrollable>
+    <Modal show={true} onHide={onClose} size="lg" centered scrollable >
       <Modal.Header closeButton>
-        <Modal.Title>{article.title}</Modal.Title>
+        <Modal.Title>
+          <div>
+            <span className={`badge ${article.severity.toLowerCase()} mb-2`}>{article.severity}</span>
+          </div>
+          {article.title}
+        </Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <div className="details-top-header">
-          <div className="published-date">
+          <div className="published-date mb-2">
             <strong>Published Date:</strong> {formattedDate}
           </div>
-          <span className={`badge ${article.severity.toLowerCase()}`}>
-            {article.severity}
-          </span>
         </div>
-        <div className="text-gray-500 text-sm mb-2">
+        <div className="published-date mb-2">
           <strong>Location:</strong> {article.location || "Unknown"}
         </div>
-        <div className="text-gray-500 text-sm mb-2">
+        <div className="published-date mb-2">
           <strong>Disruption Type:</strong> {article.disruptiontype}
         </div>
         
-        <p>{article.text}</p>
-        <div ref={mapRef} style={{ width: "100%", height: "300px" }} className="rounded-lg bg-gray-200 mb-4" />
+        <div ref={mapRef} style={{ width: "100%", height: "250px" }} className="rounded-lg bg-gray-200 mb-4" />
+        
+        <div className="flex-container mt-2 mb-4">
+          <p className="article-text text-justify">{article.text}</p>
+          <div className="image-container mt-2">
+              <img src={article.imageurl} alt="Article" style={{ width: "350px", height: "250px" }}className="full-image" />
+          </div>
+        </div>
+        
         <div>
           <Button variant="link" href={article.url} target="_blank">
             View Original Article

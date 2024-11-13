@@ -1,15 +1,15 @@
 import axios from 'axios';
 import {
-    ArcElement,
-    BarElement,
-    CategoryScale,
-    Chart as ChartJS,
-    Legend,
-    LinearScale,
-    LineElement,
-    PointElement,
-    Title,
-    Tooltip,
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
 } from 'chart.js';
 import React, { useEffect, useState } from 'react';
 import { Card, Col, Row } from 'react-bootstrap';
@@ -29,6 +29,15 @@ ChartJS.register(
 );
 
 const API_BASE_URL = "http://localhost:5001/api/analytics";
+
+// Array warna untuk 28 warna berbeda
+const COLORS = [
+  '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40',
+  '#66FF66', '#FF6666', '#6666FF', '#FFB266', '#B266FF', '#66B2FF',
+  '#FF66B2', '#B2FF66', '#66FFB2', '#B26666', '#66B266', '#B2B2FF',
+  '#FF66FF', '#B2FFB2', '#FFB2B2', '#B2FF66', '#B2B266', '#FFB266',
+  '#6666B2', '#66FF66', '#B2FF66', '#FFB2FF'
+];
 
 const AnalyticsCharts = () => {
   const [disruptionTypeTotals, setDisruptionTypeTotals] = useState([]);
@@ -58,16 +67,24 @@ const AnalyticsCharts = () => {
     fetchChartData();
   }, []);
 
+  // Donut Chart for Disruption Type Totals
   const donutChartConfig = {
-    labels: disruptionTypeTotals.map(item => item.disruptiontype),
     datasets: [{
       data: disruptionTypeTotals.map(item => parseInt(item.total, 10)),
-      backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+      backgroundColor: COLORS.slice(0, disruptionTypeTotals.length),
     }],
+    labels: disruptionTypeTotals.map(item => item.disruptiontype),
+    options: {
+      plugins: {
+        legend: {
+          position: 'bottom',
+        },
+      },
+    },
   };
 
+  // Bar Chart for Weekly Disruption Counts
   const barChartConfig = {
-    labels: [...new Set(weeklyDisruptionCounts.map(item => new Date(item.week_start).toLocaleDateString()))],
     datasets: Array.from(
       new Set(weeklyDisruptionCounts.map(item => item.disruptiontype))
     ).map((disruptionType, index) => ({
@@ -75,50 +92,98 @@ const AnalyticsCharts = () => {
       data: weeklyDisruptionCounts
         .filter(item => item.disruptiontype === disruptionType)
         .map(item => parseInt(item.total, 10)),
-      backgroundColor: ['#36A2EB', '#FF6384', '#4BC0C0', '#9966FF'][index % 4],
+      backgroundColor: COLORS[index % COLORS.length],
     })),
+    labels: [...new Set(weeklyDisruptionCounts.map(item => new Date(item.week_start).toLocaleDateString()))],
+    options: {
+      plugins: {
+        legend: {
+          position: 'bottom',
+        },
+      },
+    },
   };
 
+  // Aggregated line chart data for Severity Level Counts Over Time
+  const aggregatedData = severityLevelCounts.reduce((acc, item) => {
+    const date = new Date(item.publisheddate).toLocaleDateString();
+    const severity = item.severity;
+
+    if (!acc[date]) {
+      acc[date] = { High: 0, Medium: 0, Low: 0 };
+    }
+    acc[date][severity] += parseInt(item.total, 10);
+
+    return acc;
+  }, {});
+
+  const labels = Object.keys(aggregatedData);
+  const highData = labels.map(date => aggregatedData[date].High || 0);
+  const mediumData = labels.map(date => aggregatedData[date].Medium || 0);
+  const lowData = labels.map(date => aggregatedData[date].Low || 0);
+
   const lineChartConfig = {
-    labels: [...new Set(severityLevelCounts.map(item => new Date(item.publisheddate).toLocaleDateString()))],
-    datasets: Array.from(
-      new Set(severityLevelCounts.map(item => item.severity))
-    ).map((severity, index) => ({
-      label: severity,
-      data: severityLevelCounts
-        .filter(item => item.severity === severity)
-        .map(item => parseInt(item.total, 10)),
-      borderColor: ['#FF6384', '#36A2EB', '#FFCE56'][index % 3],
-      fill: false,
-    })),
+    labels,
+    datasets: [
+      {
+        label: 'High',
+        data: highData,
+        borderColor: '#FF6384',
+        fill: false,
+      },
+      {
+        label: 'Medium',
+        data: mediumData,
+        borderColor: '#36A2EB',
+        fill: false,
+      },
+      {
+        label: 'Low',
+        data: lowData,
+        borderColor: '#FFCE56',
+        fill: false,
+      }
+    ],
+    options: {
+      plugins: {
+        legend: {
+          position: 'bottom',
+        },
+      },
+    },
   };
 
   const totalSeverityData = {
-    labels: totalSeverityCounts.map(item => item.severity),
     datasets: [{
       data: totalSeverityCounts.map(item => parseInt(item.total, 10)),
-      backgroundColor: ['#36A2EB', '#FFCE56', '#FF6384'],
+      backgroundColor: ['#ff0000', '#ff9500', '#00b69b'],
     }],
+    labels: totalSeverityCounts.map(item => item.severity),
+    options: {
+      plugins: {
+        legend: {
+          position: 'bottom',
+        },
+      },
+    },
   };
 
   return (
     <div className="analytics-charts-container">
       <Row>
-        {/* Left Donut Chart for Disruption Type Totals */}
-        <Col md={6} className="mb-4">
-          <Card className="chart-card">
+        <Col md={6} className="mb-2">
+          <Card className="vertical-chart-card">
             <Card.Body>
-              <h5 className="card-title">Disruption Type Totals</h5>
+              <h5 className="card-title centered-title">Disruption Type Totals</h5>
               {disruptionTypeTotals.length > 0 && <Doughnut data={donutChartConfig} />}
             </Card.Body>
           </Card>
         </Col>
 
-        {/* Right Donut Chart for Total Severity Counts */}
-        <Col md={6} className="mb-4">
-          <Card className="chart-card">
+        <Col md={6} className="mb-2">
+          <Card className="vertical-chart-card">
             <Card.Body>
-              <h5 className="card-title">Total Severity Counts</h5>
+              <h5 className="card-title centered-title">Total Severity Counts</h5>
               {totalSeverityCounts.length > 0 && <Doughnut data={totalSeverityData} />}
             </Card.Body>
           </Card>
@@ -126,11 +191,10 @@ const AnalyticsCharts = () => {
       </Row>
 
       <Row>
-        {/* Full-width Bar Chart for Weekly Disruption Counts */}
-        <Col md={12} className="mb-4">
+        <Col md={12} className="mb-2">
           <Card className="horizontal-chart-card">
             <Card.Body>
-              <h5 className="card-title">Weekly Disruption Counts</h5>
+              <h5 className="card-title centered-title">Weekly Disruption Counts</h5>
               {weeklyDisruptionCounts.length > 0 && <Bar data={barChartConfig} />}
             </Card.Body>
           </Card>
@@ -138,11 +202,10 @@ const AnalyticsCharts = () => {
       </Row>
 
       <Row>
-        {/* Full-width Line Chart for Severity Level Counts Over Time */}
-        <Col md={12} className="mb-4">
+        <Col md={12} className="mb-0">
           <Card className="horizontal-chart-card">
             <Card.Body>
-              <h5 className="card-title">Severity Level Counts Over Time</h5>
+              <h5 className="card-title centered-title">Severity Level Counts Over Time</h5>
               {severityLevelCounts.length > 0 && <Line data={lineChartConfig} />}
             </Card.Body>
           </Card>

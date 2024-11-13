@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const cron = require('node-cron');
+
 require('dotenv').config();
 
 const articleRoutes = require("./routes/articleRoutes");

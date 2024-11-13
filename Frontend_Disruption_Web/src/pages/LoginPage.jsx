@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Alert } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import "../css/pages/LoginPage.css";
 
 function Login() {
@@ -44,7 +44,7 @@ function Login() {
       <div className="login-card">
         <div className="login-box">
           <div className="profile-pic">
-            <img src="/img/profile-placeholder.png" alt="Profile Icon" />
+            <img src="/img/logo.png" alt="Logo" className="logo" />
           </div>
 
           {/* Display Alert if there’s an error message */}

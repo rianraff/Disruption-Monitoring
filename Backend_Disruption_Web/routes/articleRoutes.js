@@ -4,7 +4,6 @@ const {
   scrapeAndSaveArticles, 
   getAllArticles, 
   getFilteredArticles,
-  getArticlesByPreferences,
   getArticleById,
   deleteArticle,
 } = require('../controllers/articlesController.js');
@@ -15,9 +14,6 @@ router.post('/scrape', scrapeAndSaveArticles);
 
 // Route to get all articles (with optional filtering)
 router.get('/', getFilteredArticles);
-
-// Route to get articles filtered by user preferences
-router.get('/filterByPreferences', authenticateToken, getArticlesByPreferences);
 
 // Route to get a single article by ID
 router.get('/:id', getArticleById);
