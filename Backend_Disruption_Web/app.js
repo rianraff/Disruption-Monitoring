@@ -17,7 +17,7 @@ const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors({ origin: ["https://your-frontend-domain.com"] }));
+app.use(cors());
 app.use(express.json());
 app.use(compression());
 app.use(morgan("combined"));
