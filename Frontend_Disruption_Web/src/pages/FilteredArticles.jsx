@@ -14,7 +14,8 @@ const FilteredArticles = () => {
   const { state: filterCriteria } = useLocation();
   const [searchParams] = useSearchParams();
   const [articles, setArticles] = useState([]);
-  const [selectedArticle, setSelectedArticle] = useState(null);
+  const [selectedArticle, setSelectedArticle] = useState(null); // Untuk artikel yang dipilih
+  const [isModalOpen, setIsModalOpen] = useState(false); // Untuk status modal
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const query = searchParams.get("query");

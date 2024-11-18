@@ -3,6 +3,7 @@ import { Button, Modal } from 'react-bootstrap';
 
 const ArticleDetail = ({ article, onClose }) => {
   const mapRef = useRef(null);
+  const imageRef = useRef(null);
 
   useEffect(() => {
     const loadGoogleMaps = () => {

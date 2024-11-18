@@ -14,6 +14,15 @@ const ArticlePreferences = () => {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [locations, setLocations] = useState([]);
+  const [selectedLocations, setSelectedLocations] = useState([]);
+  const [radius, setRadius] = useState('');
+  const [disruptionTypes, setDisruptionTypes] = useState([]);
+  const [selectedDisruptionTypes, setSelectedDisruptionTypes] = useState([]);
+  const [severityLevels, setSeverityLevels] = useState([]);
+  const [selectedSeverityLevels, setSelectedSeverityLevels] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [selectedSuppliers, setSelectedSuppliers] = useState([]);
 
   const navigate = useNavigate();
 
