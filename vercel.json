@@ -1,12 +1,24 @@
 {
-    "version": 2,
-    "builds": [
-      { "src": "Backend_Disruption_Web/api/**/*.js", "use": "@vercel/node" },
-      { "src": "Frontend_Disruption_Web/package.json", "use": "@vercel/static-build", "config": { "distDir": "Frontend_Disruption_Web/build" } }
-    ],
-    "routes": [
-      { "src": "/api/(.*)", "dest": "Backend_Disruption_Web/api/$1.js" },
-      { "src": "/(.*)", "dest": "Frontend_Disruption_Web/$1" }
-    ]
-  }
-  
+  "version": 2,
+  "builds": [
+    {
+      "src": "Backend_Disruption_Web/api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "Frontend_Disruption_Web/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "build" }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "Backend_Disruption_Web/api/$1.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "Frontend_Disruption_Web/$1"
+    }
+  ]
+}
