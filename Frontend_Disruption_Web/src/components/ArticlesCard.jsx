@@ -2,7 +2,7 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import "../css/components/ArticlesCard.css";
 
-const API_BASE_URL = "http://localhost:5001/api";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const ArticlesCard = ({ onArticleClick }) => {
   const [articles, setArticles] = useState([]);

@@ -7,8 +7,8 @@ import '../css/pages/FilteredArticles.css';
 import NavbarTop from '../partials/NavbarTop';
 import Sidebar from '../partials/Sidebar';
 
-const API_BASE_URL_FILTER = "http://localhost:5001/api/preferences/filter-articles";
-const API_BASE_URL_SEARCH = "http://localhost:5001/api/preferences/search";
+// Ambil base URL API dari environment variable
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const FilteredArticles = () => {
   const { state: filterCriteria } = useLocation();
@@ -26,9 +26,9 @@ const FilteredArticles = () => {
         let response;
 
         if (query) {
-          response = await axios.get(API_BASE_URL_SEARCH, { params: { query } });
+          response = await axios.get(`${API_BASE_URL}/preferences/search`, { params: { query } });
         } else if (filterCriteria) {
-          response = await axios.get(API_BASE_URL_FILTER, { params: filterCriteria });
+          response = await axios.get(`${API_BASE_URL}/preferences/filter-articles`, { params: filterCriteria });
         }
 
         setArticles(response ? response.data : []);

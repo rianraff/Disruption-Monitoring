@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Alert } from "react-bootstrap"; // Import Alert for error handling
+import { useNavigate } from "react-router-dom";
 import "../css/pages/RegisterPage.css";
 
 function Register() {
@@ -10,10 +10,13 @@ function Register() {
     const [errorMessage, setErrorMessage] = useState("");
     const navigate = useNavigate();
 
+    // Base URL dari environment variable
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "/api";
+
     const handleRegister = async (event) => {
         event.preventDefault();
         try {
-            const response = await fetch("http://localhost:5001/api/users/register", {
+            const response = await fetch(`${API_BASE_URL}/users/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, email, password }),

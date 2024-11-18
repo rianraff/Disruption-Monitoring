@@ -15,6 +15,9 @@ function HomePage() {
   const [filteredArticles, setFilteredArticles] = useState([]);
   const [selectedArticle, setSelectedArticle] = useState(null);
 
+  // Get API Base URL from environment variables
+  const BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
@@ -26,16 +29,18 @@ function HomePage() {
     const fetchData = async () => {
       if (token && userId) {
         try {
+          // Fetch user data
           const userResponse = await axios.get(
-            `http://localhost:5001/api/users/${userId}`,
+            `${BASE_URL}/users/${userId}`, // Use BASE_URL from .env
             {
               headers: { Authorization: `Bearer ${token}` },
             }
           );
           setUserName(userResponse.data.name);
 
+          // Fetch articles data
           const articlesResponse = await axios.get(
-            'http://localhost:5001/api/articles',
+            `${BASE_URL}/articles`, // Use BASE_URL from .env
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -48,7 +53,7 @@ function HomePage() {
     };
 
     fetchData();
-  }, []);
+  }, [BASE_URL]); // Add BASE_URL to dependency array to ensure it updates if it changes
 
   const handleArticleClick = (article) => {
     setSelectedArticle(article);
@@ -76,7 +81,7 @@ function HomePage() {
             </div>
 
             <div className="cards-layout">
-              {/* Articles Card without extra wrapping */}
+              {/* Articles Card */}
               <ArticlesCard 
                 articles={filteredArticles}
                 onArticleClick={handleArticleClick} 

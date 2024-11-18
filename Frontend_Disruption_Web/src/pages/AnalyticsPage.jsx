@@ -1,15 +1,15 @@
 import axios from 'axios';
 import {
-    ArcElement,
-    BarElement,
-    CategoryScale,
-    Chart as ChartJS,
-    Legend,
-    LinearScale,
-    LineElement,
-    PointElement,
-    Title,
-    Tooltip,
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
 } from 'chart.js';
 import React, { useEffect, useState } from 'react';
 import { Card, Col, Container, Row } from 'react-bootstrap';
@@ -30,7 +30,8 @@ ChartJS.register(
   Legend
 );
 
-const API_BASE_URL = "http://localhost:5001/api/analytics";
+// Menggunakan base URL dari .env
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "/api";
 
 const COLORS = [
   '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40',
@@ -51,10 +52,10 @@ const AnalyticsPage = () => {
     const fetchChartData = async () => {
       try {
         const [disruptionTotalsRes, weeklyCountsRes, severityCountsRes, totalSeverityRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/disruption-type-totals`),
-          axios.get(`${API_BASE_URL}/weekly-disruption-type-counts`),
-          axios.get(`${API_BASE_URL}/severity-level-counts`),
-          axios.get(`${API_BASE_URL}/total-severity-counts`)
+          axios.get(`${API_BASE_URL}/analytics/disruption-type-totals`),
+          axios.get(`${API_BASE_URL}/analytics/weekly-disruption-type-counts`),
+          axios.get(`${API_BASE_URL}/analytics/severity-level-counts`),
+          axios.get(`${API_BASE_URL}/analytics/total-severity-counts`)
         ]);
 
         setDisruptionTypeTotals(disruptionTotalsRes.data);

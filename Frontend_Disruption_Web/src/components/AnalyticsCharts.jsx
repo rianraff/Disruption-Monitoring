@@ -28,7 +28,8 @@ ChartJS.register(
   Legend
 );
 
-const API_BASE_URL = "http://localhost:5001/api/analytics";
+// Gunakan API_BASE_URL dari environment variable
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 // Array warna untuk 28 warna berbeda
 const COLORS = [
@@ -49,10 +50,10 @@ const AnalyticsCharts = () => {
     const fetchChartData = async () => {
       try {
         const [disruptionTotalsRes, weeklyCountsRes, severityCountsRes, totalSeverityRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/disruption-type-totals`),
-          axios.get(`${API_BASE_URL}/weekly-disruption-type-counts`),
-          axios.get(`${API_BASE_URL}/severity-level-counts`),
-          axios.get(`${API_BASE_URL}/total-severity-counts`)
+          axios.get(`${API_BASE_URL}/analytics/disruption-type-totals`),
+          axios.get(`${API_BASE_URL}/analytics/weekly-disruption-type-counts`),
+          axios.get(`${API_BASE_URL}/analytics/severity-level-counts`),
+          axios.get(`${API_BASE_URL}/analytics/total-severity-counts`)
         ]);
 
         setDisruptionTypeTotals(disruptionTotalsRes.data);
