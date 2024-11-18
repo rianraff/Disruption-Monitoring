@@ -8,8 +8,6 @@ const API_BASE_URL = "http://18.141.34.124:7043/api";
 const MapCard = () => {
   const [cities, setCities] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
-  const [mapCenter, setMapCenter] = useState([0, 0]); // Set default center sesuai preferensi
-  const [mapZoom, setMapZoom] = useState(2);
 
   useEffect(() => {
     const fetchData = async () => {

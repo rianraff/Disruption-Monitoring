@@ -13,15 +13,6 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const ArticlePreferences = () => {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
-  const [locations, setLocations] = useState([]);
-  const [selectedLocations, setSelectedLocations] = useState([]);
-  const [radius, setRadius] = useState('');
-  const [disruptionTypes, setDisruptionTypes] = useState([]);
-  const [selectedDisruptionTypes, setSelectedDisruptionTypes] = useState([]);
-  const [severityLevels, setSeverityLevels] = useState([]);
-  const [selectedSeverityLevels, setSelectedSeverityLevels] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
-  const [selectedSuppliers, setSelectedSuppliers] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const navigate = useNavigate();
@@ -46,20 +37,6 @@ const ArticlePreferences = () => {
     };
     fetchDropdownData();
   }, []);
-
-  const handleSelectAll = (setSelected, options) => {
-    setSelected((prevSelected) =>
-      prevSelected.length === options.length ? [] : options
-    );
-  };
-
-  const handleCheckboxChange = (value, selectedValues, setSelectedValues) => {
-    if (selectedValues.includes(value)) {
-      setSelectedValues(selectedValues.filter((item) => item !== value));
-    } else {
-      setSelectedValues([...selectedValues, value]);
-    }
-  };
 
   const handleFilterSubmit = (e) => {
     e.preventDefault();
